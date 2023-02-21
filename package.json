@@ -19,6 +19,8 @@
   "homepage": "https://github.com/2212-sdc1-acromantula/reviews#readme",
   "dependencies": {
     "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "heapdump": "^0.3.15",
     "pg": "^8.9.0"
   }
 }

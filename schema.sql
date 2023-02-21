@@ -10,20 +10,21 @@
 --
 -- ---
 
-DROP TABLE IF EXISTS reviews CASCADE;
+--DROP TABLE IF EXISTS reviews CASCADE;
 
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
   review_id INTEGER NULL DEFAULT NULL,
   product_id INTEGER NOT NULL,
   rating INTEGER NULL DEFAULT NULL,
-  summary VARCHAR(60) NULL DEFAULT NULL,
+  summary VARCHAR NULL DEFAULT NULL,
   recommend BOOLEAN NULL DEFAULT NULL,
   response VARCHAR NULL DEFAULT NULL,
   body VARCHAR(1000) NULL DEFAULT NULL,
-  date TIMESTAMP NULL DEFAULT NULL,
+  date VARCHAR NULL DEFAULT NULL,
   helpfulness INTEGER NULL DEFAULT 0,
   reported BOOLEAN NULL DEFAULT FALSE,
-  reviewer_name_users VARCHAR NULL DEFAULT NULL,
+  reviewer_name VARCHAR NULL DEFAULT NULL,
+  reviewer_email VARCHAR NULL DEFAULT NULL,
   PRIMARY KEY (review_id)
 );
 
@@ -33,9 +34,9 @@ CREATE TABLE reviews (
 --
 -- ---
 
-DROP TABLE IF EXISTS photos;
+--DROP TABLE IF EXISTS photos;
 
-CREATE TABLE photos (
+CREATE TABLE IF NOT EXISTS photos (
   id INTEGER NULL DEFAULT NULL,
   review_id_reviews INTEGER NULL DEFAULT NULL,
   url VARCHAR(2048) NULL DEFAULT NULL,
@@ -47,9 +48,9 @@ CREATE TABLE photos (
 --
 -- ---
 
-DROP TABLE IF EXISTS characteristics;
+--DROP TABLE IF EXISTS characteristics;
 
-CREATE TABLE characteristics (
+CREATE TABLE IF NOT EXISTS characteristics (
   id INTEGER NULL DEFAULT NULL,
   characteristic_id INTEGER NULL DEFAULT NULL,
   review_id_reviews INTEGER NULL DEFAULT NULL,
@@ -57,6 +58,22 @@ CREATE TABLE characteristics (
   value INTEGER NULL DEFAULT NULL,
   PRIMARY KEY (id)
 );
+
+--DROP TABLE IF EXISTS characteristic_values;
+
+CREATE TABLE IF NOT EXISTS characteristic_values (
+  id INTEGER NULL DEFAULT NULL,
+  name_actual VARCHAR NULL DEFAULT NULL,
+  PRIMARY KEY (id)
+);
+
+--DROP TABLE IF EXISTS combined;
+
+CREATE TABLE IF NOT EXISTS combined AS SELECT characteristics.id, characteristics.characteristic_id, characteristics.review_id_reviews, characteristic_values.name_actual, characteristics.value
+FROM characteristics
+INNER JOIN characteristic_values
+ON characteristics.characteristic_id = characteristic_values.id;
+
 
 -- ---
 -- Foreign Keys
