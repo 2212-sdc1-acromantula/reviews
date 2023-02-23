@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS reviews (
   PRIMARY KEY (review_id)
 );
 
+CREATE INDEX IF NOT EXISTS review_index ON reviews(review_id);
+CREATE INDEX IF NOT EXISTS review_index_1 ON reviews(product_id);
 
 -- ---
 -- Table 'photos'
@@ -75,14 +77,24 @@ FROM characteristics
 INNER JOIN characteristic_values
 ON characteristics.characteristic_id = characteristic_values.id;
 
-DROP TABLE IF EXISTS combined_photos;
+ALTER TABLE combined ADD PRIMARY KEY (id);
+ALTER TABLE combined ADD FOREIGN KEY (review_id_reviews) REFERENCES reviews (review_id);
+CREATE INDEX IF NOT EXISTS combined_index_1 ON combined(id);
+CREATE INDEX IF NOT EXISTS combined_index_2 ON combined(review_id_reviews);
+CREATE INDEX IF NOT EXISTS combined_index_3 ON combined(product_id);
+
+---DROP TABLE IF EXISTS combined_photos;
 
 CREATE TABLE IF NOT EXISTS combined_photos AS SELECT photos.id, photos.review_id_reviews, photos.url, reviews.product_id
 FROM reviews
 INNER JOIN photos
 ON reviews.review_id = photos.review_id_reviews;
 
-
+ALTER TABLE combined_photos ADD PRIMARY KEY (id);
+ALTER TABLE combined_photos ADD FOREIGN KEY (review_id_reviews) REFERENCES reviews (review_id);
+CREATE INDEX IF NOT EXISTS combined_photos_index_1 ON combined_photos(id);
+CREATE INDEX IF NOT EXISTS combined_photos_index_2 ON combined_photos(review_id_reviews);
+CREATE INDEX IF NOT EXISTS combined_photos_index_3 ON combined_photos(product_id);
 
 -- ---
 -- Foreign Keys
