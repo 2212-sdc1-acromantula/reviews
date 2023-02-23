@@ -29,7 +29,6 @@ exports.getReviews = async (query) => {
         reviewEntry['reviewer_name'] = JSON.parse(reviewEntry['reviewer_name']);
         reviewEntry['reviewer_email'] = JSON.parse(reviewEntry['reviewer_email']);
         photoList.forEach((photoEntry) => {
-          console.log('photoEntry.url: ', photoEntry.url);
           if (reviewEntry.review_id === photoEntry.review_id_reviews) {
             reviewEntry['photos'].push({
               id: photoEntry.id,
@@ -74,7 +73,7 @@ exports.postReview = async body => {
 
    let photosPromise = new Promise((resolve, reject) => {
     let photoArray = body.photos.map(async (entry) => {
-       console.log('this is entry: ', entry);
+       //console.log('this is entry: ', entry);
       await db.query(`INSERT INTO combined_photos (id, review_id_reviews, url, product_id) VALUES(${maxPhoto}, ${maxReview}, '${entry}', ${body.product_id}) ON CONFLICT DO NOTHING`
       )
       .catch((err) => {
@@ -103,9 +102,8 @@ exports.postReview = async body => {
 
   })
 
-  Promise.all([reviewsPromise, photoPromise, characteristicsPromise])
+  Promise.all([reviewsPromise, photosPromise, characteristicsPromise])
   .then((result) => {
-    console.log(result);
     return result;
   })
 

@@ -22,15 +22,15 @@ exports.getReviews = (req, res) => {
 exports.postReview = (req, res) => {
   reviewsModel.postReview(req.body)
   .then((result) => {
-    res.status(204).send(result);
+    res.status(201).send(result);
   })
   .catch((err) => {
+    console.log('this is err in controllers: ', err);
     res.status(501).send(err);
   });
 };
 
 exports.markHelpful = (req, res) => {
-  console.log('this is req.params: ', req.params);
   reviewsModel.markHelpful(Number(req.params.review_id))
   .then((result) => {
     res.status(204).send(result);
