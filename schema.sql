@@ -63,16 +63,25 @@ CREATE TABLE IF NOT EXISTS characteristics (
 
 CREATE TABLE IF NOT EXISTS characteristic_values (
   id INTEGER NULL DEFAULT NULL,
+  product_id INTEGER NULL DEFAULT NULL,
   name_actual VARCHAR NULL DEFAULT NULL,
   PRIMARY KEY (id)
 );
 
 --DROP TABLE IF EXISTS combined;
 
-CREATE TABLE IF NOT EXISTS combined AS SELECT characteristics.id, characteristics.characteristic_id, characteristics.review_id_reviews, characteristic_values.name_actual, characteristics.value
+CREATE TABLE IF NOT EXISTS combined AS SELECT characteristics.id, characteristics.characteristic_id, characteristics.review_id_reviews, characteristic_values.product_id, characteristic_values.name_actual, characteristics.value
 FROM characteristics
 INNER JOIN characteristic_values
 ON characteristics.characteristic_id = characteristic_values.id;
+
+DROP TABLE IF EXISTS combined_photos;
+
+CREATE TABLE IF NOT EXISTS combined_photos AS SELECT photos.id, photos.review_id_reviews, photos.url, reviews.product_id
+FROM reviews
+INNER JOIN photos
+ON reviews.review_id = photos.review_id_reviews;
+
 
 
 -- ---

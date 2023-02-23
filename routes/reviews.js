@@ -15,4 +15,6 @@ router.put("/:review_id/helpful", reviewsController.markHelpful);
 
 router.put("/:review_id/report", reviewsController.report);
 
+router.get("/meta", reviewsController.meta);
+
 module.exports = router;

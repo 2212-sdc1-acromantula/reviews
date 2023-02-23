@@ -28,7 +28,7 @@ client.connect((err) => {
 // const textCharacteristicReviews = `INSERT INTO characteristics (id, characteristic_id, review_id_reviews, value) VALUES($1, $2, $3, $4) ON CONFLICT DO NOTHING`;
 
 //for characteristics: start byte=19 and update query value to [values[0], values[2]]
-// const textCharacteristics = `INSERT INTO characteristic_values (id, name_actual) VALUES($1, $2) ON CONFLICT DO NOTHING`;
+// const textCharacteristics = `INSERT INTO characteristic_values (id, product_id, name_actual) VALUES($1, $2, $3) ON CONFLICT DO NOTHING`;
 
 async function insertChunks(readable, text) {
   let previous = '';
@@ -51,7 +51,7 @@ async function insertChunks(readable, text) {
       values = previous.slice(0, eolIndex).split(',');
       //console.log([values[0], values[2]]);
       await client
-        .query(text, [values[0], values[2]]) //CHANGE THIS TO values if not char
+        .query(text, values)
         .catch(e => console.error(e.stack));
       values = null;
       console.log(counter);
@@ -63,7 +63,7 @@ async function insertChunks(readable, text) {
   if (previous.length > 0) {
     values = previous.split(',');
     client
-    .query(text, [values[0], values[2]])
+    .query(text, values)
     .catch(e => console.error(e.stack));
   }
   console.log('finished adding files to db');
@@ -77,5 +77,5 @@ const readableReviews = fs.createReadStream(
       highWaterMark: 128 * 1024
     });
 
-//insertChunks(readableReviews, putOneOfTheTextEntriesHere);
+insertChunks(readableReviews, textCharacteristics);
 
