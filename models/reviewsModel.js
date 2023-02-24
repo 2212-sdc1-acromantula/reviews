@@ -11,14 +11,14 @@ exports.getReviews = async (query) => {
       ordering = "date";
     }
     let reviewsListObject = await db.query(`SELECT * FROM reviews
-    WHERE product_id=${query.product_id} AND reported=false
-    ORDER BY ${ordering} DESC
-    LIMIT ${query.count}
-    OFFSET ${query.page};`
+    WHERE product_id=$1 AND reported=false
+    ORDER BY $2 DESC
+    LIMIT $3
+    OFFSET $4;`, [query.product_id, ordering, query.count, query.page]
     )
     let reviewsList = reviewsListObject.rows;
 
-    let photoListObject = await db.query(`SELECT review_id_reviews, url, id FROM combined_photos WHERE product_id=${query.product_id}`)
+    let photoListObject = await db.query(`SELECT review_id_reviews, url, id FROM combined_photos WHERE product_id=$1;`, [query.product_id])
     let photoList = photoListObject.rows;
 
       reviewsList.forEach((reviewEntry) => {
@@ -59,7 +59,7 @@ exports.postReview = async body => {
   let maxCombined = getMaxCombined.rows[0].max + 1;
 
   let reviewsPromise = new Promise((resolve, reject) => {
-    db.query(`INSERT INTO reviews (review_id, product_id, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness) VALUES(${maxReview}, ${body.product_id}, ${body.rating}, '${Date.now()}', '${body.summary}', '${body.body}', ${true}, ${false}, '${body.name}', '${body.email}', '${""}', ${0}) ON CONFLICT DO NOTHING RETURNING review_id`
+    db.query(`INSERT INTO reviews (review_id, product_id, rating, date, summary, body, recommend, reported, reviewer_name, reviewer_email, response, helpfulness) VALUES($1, $2, $3, '${Date.now()}', $4, $5, ${true}, ${false}, $6, $7, '${""}', ${0}) ON CONFLICT DO NOTHING RETURNING review_id;`, [maxReview, body.product_id, body.rating, body.summary, body.body, body.name, body.email]
     )
     .then((result) => {
       resolve('Insert into reviews OK');
@@ -70,34 +70,41 @@ exports.postReview = async body => {
     })
   })
 
-
+//let photoArray =
    let photosPromise = new Promise((resolve, reject) => {
-    let photoArray = body.photos.map(async (entry) => {
-       //console.log('this is entry: ', entry);
-      await db.query(`INSERT INTO combined_photos (id, review_id_reviews, url, product_id) VALUES(${maxPhoto}, ${maxReview}, '${entry}', ${body.product_id}) ON CONFLICT DO NOTHING`
-      )
-      .catch((err) => {
-        console.log('this is a photoPromise error: ', err);
-        reject(err);
-      })
-      maxPhoto++;
-    })
+    (async function () {
+
+      for (let i = 0; i < body.photos.length; i++) {
+          await db.query(`INSERT INTO combined_photos (id, review_id_reviews, url, product_id) VALUES($1, $2, $3, $4) ON CONFLICT DO NOTHING;`, [maxPhoto, maxReview, body.photos[i], body.product_id]
+          )
+          .catch((err) => {
+            console.log('this is a photoPromise error: ', err);
+            reject(err);
+          })
+          maxPhoto++;
+        }
+      })();
       resolve('Insert into photos OK');
   })
 
   let characteristicsPromise = new Promise((resolve, reject) => {
-    Object.keys(body.characteristics).forEach(async (key) => {
+    let characteristicsArray = Object.keys(body.characteristics);
+      (async function() {
 
-      let name = await db.query(`SELECT name_actual FROM characteristic_values WHERE id=${key} LIMIT 1`)
+        for (let i = 0; i < characteristicsArray.length; i++) {
 
-      await db.query(`INSERT INTO combined (id, characteristic_id, review_id_reviews, product_id, name_actual, value) VALUES(${maxCombined}, ${key}, ${maxReview}, ${body.product_id}, '${name.rows[0].name_actual}', ${body.characteristics[key]}) ON CONFLICT DO NOTHING`
-      )
-      .catch((err) => {
-        console.log('this is a characteristicPromise error: ', err);
-        reject(err);
-      })
-      maxCombined++;
-    })
+          //console.log('maxCombined is: ', maxCombined);
+          let name = await db.query(`SELECT name_actual FROM characteristic_values WHERE id=${characteristicsArray[i]} LIMIT 1`)
+
+          await db.query(`INSERT INTO combined (id, characteristic_id, review_id_reviews, product_id, name_actual, value) VALUES($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING;`, [maxCombined, characteristicsArray[i], maxReview, body.product_id, name.rows[0].name_actual, body.characteristics[characteristicsArray[i]]]
+          )
+          .catch((err) => {
+            console.log('this is a characteristicPromise error: ', err);
+            reject(err);
+          })
+          maxCombined++;
+        }
+      })();
       resolve('Insert into characteristics OK');
 
   })
@@ -146,11 +153,11 @@ exports.meta = async (query) => {
   let characteristics = {};
   try {
       ratings = await db.query(`SELECT rating, recommend FROM reviews
-      WHERE product_id=${query.product_id} AND reported=false`
+      WHERE product_id=$1 AND reported=false;`, [query.product_id]
       )
       //console.log(ratings.rows);
       characteristics = await db.query(`SELECT name_actual, characteristic_id, value FROM combined
-      WHERE product_id=${query.product_id}`
+      WHERE product_id=$1;`, [query.product_id]
       )
       //console.log(characteristics.rows);
       return [ratings.rows, characteristics.rows]
